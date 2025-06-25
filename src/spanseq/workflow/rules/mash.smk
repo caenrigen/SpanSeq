@@ -16,7 +16,7 @@ rule mash_dist:
     log:
         "log/{sample}_mash.log"
     params:
-        bioseq = config["general"]["sample"]["bioseq_type"],
+        bioseq_flag = "-a" if config["general"]["sample"]["bioseq_type"] != "nucleotides" else "",
         data_dir = config["general"]["datadir"],
         mash_path = config["software"]["mash"]["path"],
         sketch_size = config["software"]["mash"]["sketch_size"],
@@ -29,17 +29,8 @@ rule mash_dist:
         "benchmarks/{sample}.mash.benchmark.txt"
     shell:
         """
-        bioseq=("{params.bioseq}")
-        if [ "$bioseq" = "nucleotides" ]
-        then
-            {params.mash_path}mash triangle {param_input} {input.in_fsa} \
-            -k {params.kmer_size} -s {params.sketch_size} -i  \
-            -p {threads} {params.extra_args_sketch} > {output.dist} \
-            {params.extra_args_triangle}
-        else
-            {params.mash_path}mash triangle {param_input} {input.in_fsa} \
-            -k {params.kmer_size} -s {params.sketch_size} -i -a \
-            -p {threads} {params.extra_args_sketch} > {output.dist}\
-             {params.extra_args_triangle}
-        fi
+        {params.mash_path}mash triangle {param_input} {input.in_fsa} \
+        -k {params.kmer_size} -s {params.sketch_size} -i {params.bioseq_flag} \
+        -p {threads} {params.extra_args_sketch} > {output.dist} \
+        {params.extra_args_triangle}
         """
